@@ -11,15 +11,19 @@ public class GrabItem : MonoBehaviour
         FixedJoint,
         Force,
     }
-	public GameObject EnableDisable;
     public float attachForce = 800.0f;
     public float attachForceDamper = 25.0f;
+	
+	public AttachPoint attachPoint;
+
     public AttachMode attachMode = AttachMode.FixedJoint;
 
     [EnumFlags]
     public Hand.AttachmentFlags attachmentFlags = 0;
 
-    private List<Hand> holdingHands = new List<Hand>();
+
+	private Transform _initPosition;
+	private List<Hand> holdingHands = new List<Hand>();
 	private List<Rigidbody> holdingBodies = new List<Rigidbody>();
 	private List<Vector3> holdingPoints = new List<Vector3>();
 
@@ -30,21 +34,42 @@ public class GrabItem : MonoBehaviour
 	{
 		GetComponentsInChildren<Rigidbody>(rigidBodies);
 	}
-	void Update()
+    private void Start()
+    {
+		_initPosition = transform;
+	}
+    void Update()
 	{
 		for (int i = 0; i < holdingHands.Count; i++)
 		{
 			if (holdingHands[i].IsGrabEnding(this.gameObject))
 			{
 				/// Object is being released
+				transform.tag = AnimHash.TOOL;
 				PhysicsDetach(holdingHands[i]);
 				//On realesing object change the tag to tools tags
-				transform.tag = AnimHash.TOOL;
-				
+				CheckAttached();
+
+
 			}
 		}
 	}
+	private void HandHoverUpdate(Hand hand)
+	{
+		GrabTypes startingGrabType = hand.GetGrabStarting();
 
+		if (startingGrabType != GrabTypes.None)
+		{
+			/// Object is being grabbed
+			PhysicsAttach(hand, startingGrabType);
+			//Change the tag of the transform
+			transform.tag = AnimHash.UNTAG;
+			_initPosition = transform;
+			//When we grab the object it should not be kinamatic 
+			GetComponent<Rigidbody>().isKinematic = false;
+
+		}
+	}
 	private bool PhysicsDetach(Hand hand)
 	{
 		int i = holdingHands.IndexOf(hand);
@@ -115,21 +140,7 @@ public class GrabItem : MonoBehaviour
 
 
 	//-------------------------------------------------
-	private void HandHoverUpdate(Hand hand)
-	{
-		GrabTypes startingGrabType = hand.GetGrabStarting();
-
-		if (startingGrabType != GrabTypes.None)
-		{
-			/// Object is being grabbed
-			PhysicsAttach(hand, startingGrabType);
-			//Change the tag of the transform
-			transform.tag = AnimHash.UNTAG;
-			//When we grab the object it should not be kinamatic 
-			GetComponent<Rigidbody>().isKinematic = false;
-			
-		}
-	}
+	
 
 	private void PhysicsAttach(Hand hand, GrabTypes startingGrabType)
 	{		
@@ -179,4 +190,13 @@ public class GrabItem : MonoBehaviour
 		holdingBodies.Add(holdingBody);
 		holdingPoints.Add(holdingPoint);
 	}
+
+	void CheckAttached()
+    {
+        if (!attachPoint.isAttached)
+        {
+			transform.position = _initPosition.position;
+			transform.eulerAngles = _initPosition.eulerAngles;
+		}
+    }
 }

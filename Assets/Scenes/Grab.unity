@@ -862,6 +862,7 @@ GameObject:
   - component: {fileID: 1967009160}
   - component: {fileID: 1967009161}
   - component: {fileID: 1967009162}
+  - component: {fileID: 1967009163}
   m_Layer: 0
   m_Name: Attach Point
   m_TagString: Untagged
@@ -920,6 +921,54 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attachPoint: {fileID: 965496924}
+  attachedObject: {fileID: 0}
+  isAttached: 0
+--- !u!114 &1967009163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967009159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60523e0647cc6ab43acc73cb266a32a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_InteractionManager: {fileID: 0}
+  m_InteractionLayers:
+    m_Bits: 4294967295
+  m_Handedness: 0
+  m_AttachTransform: {fileID: 0}
+  m_KeepSelectedTargetValid: 1
+  m_DisableVisualsWhenBlockedInGroup: 1
+  m_StartingSelectedInteractable: {fileID: 0}
+  m_StartingTargetFilter: {fileID: 0}
+  m_HoverEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  m_HoverExited:
+    m_PersistentCalls:
+      m_Calls: []
+  m_SelectEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  m_SelectExited:
+    m_PersistentCalls:
+      m_Calls: []
+  m_StartingHoverFilters: []
+  m_StartingSelectFilters: []
+  m_ShowInteractableHoverMeshes: 1
+  m_InteractableHoverMeshMaterial: {fileID: 0}
+  m_InteractableCantHoverMeshMaterial: {fileID: 0}
+  m_SocketActive: 1
+  m_InteractableHoverScale: 1
+  m_RecycleDelayTime: 1
+  m_HoverSocketSnapping: 0
+  m_SocketSnappingRadius: 0.1
+  m_SocketScaleMode: 0
+  m_FixedScale: {x: 1, y: 1, z: 1}
+  m_TargetBoundsSize: {x: 1, y: 1, z: 1}
 --- !u!1001 &6222630528146791425
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -983,6 +1032,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Grabable Object
       objectReference: {fileID: 0}
+    - target: {fileID: 3382125277065811119, guid: cdedf9c6f45da8e4d94c95ebaa42bf22,
+        type: 3}
+      propertyPath: attachPoint
+      value: 
+      objectReference: {fileID: 1967009162}
     - target: {fileID: 3382125277065811119, guid: cdedf9c6f45da8e4d94c95ebaa42bf22,
         type: 3}
       propertyPath: EnableDisable
