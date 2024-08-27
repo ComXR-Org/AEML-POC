@@ -47,6 +47,7 @@ public class StepsManager : MonoBehaviour {
     float NewLineRopesRadius;
     public GameObject[] vr_Tools;
     public AudioSource audioSource;
+    public Transform toolSpwanPos;
     #endregion
 
     #region EVENTS

@@ -1,17 +1,15 @@
-    using System.Collections;
+using EPOOutline;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityEngine.UI;
-using EPOOutline;
-using System;
 using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 [System.Serializable]
 public class Step {
@@ -328,6 +326,8 @@ public class Steps : MonoBehaviour {
             //GameObject currentProgress = Instantiate(progress, progressGroup);
             GameObject currentProgress = Instantiate(Resources.Load("Toggle", typeof(GameObject)),progressGroup) as GameObject;
             currentProgress.transform.GetChild(1).GetComponent<Text>().text = selectedSteps[i].stepInstructions;
+            currentProgress.transform.GetChild(1).GetComponent<Text>().color = Color.grey;
+            currentProgress.GetComponent<SwitchStepState>().IsOn(false);
             loadedStepsInfo.Add(currentProgress);
           //  GameObject currentProgressLine = Instantiate(stepsMgr.divideingLineForStepList, progressGroup);
         }
@@ -343,8 +343,10 @@ public class Steps : MonoBehaviour {
         //  if(currentProcess==Process.Assembly)
         if (useStepPlayer)
         {
-            SetProcess(currentProcess);
-            Previous();
+            SetProcess(Process.Dismantling);
+           // Previous();
+           Previous_New();
+            progressBar.SetScrollPosPrev();
         }
         else
         {
@@ -374,7 +376,8 @@ public class Steps : MonoBehaviour {
         stepsMgr = StepsManager.Instance;
         if (useStepPlayer) {
             StepsManager.NextStep += Next;
-            StepsManager.PreviousStep += Previous;
+            //StepsManager.PreviousStep += Previous;
+            StepsManager.PreviousStep += Previous_New;
             StepsManager.ReplayStep += Replay;
         } else {
             StepsManager.NextStep += NextAnim;
@@ -386,7 +389,8 @@ public class Steps : MonoBehaviour {
 
         if (useStepPlayer) {
             StepsManager.NextStep -= Next;
-            StepsManager.PreviousStep -= Previous;
+            //StepsManager.PreviousStep -= Previous;
+            StepsManager.PreviousStep -= Previous_New;
             StepsManager.ReplayStep -= Replay;
         } else {
             StepsManager.NextStep -= NextAnim;
@@ -469,27 +473,37 @@ public class Steps : MonoBehaviour {
         if (currentStep >= totalSteps)
             currentStep = totalSteps - 1;
         Step curStep = GetCurrentStep();
-        stepsMgr.cautionHeader.SetActive(false);
+   /*     stepsMgr.cautionHeader.SetActive(false);
        // stepsMgr.cautionLine.SetActive(false);
-        /*      if (curStep.cautionNotes == "") {
+        *//*      if (curStep.cautionNotes == "") {
                   stepsMgr.cautionHeader.SetActive(false);
                   stepsMgr.cautionLine.SetActive(false);
               } else {
                   stepsMgr.cautionHeader.SetActive(true);
                   stepsMgr.cautionLine.SetActive(true);
-              }*/
+              }*//*
+        stepsMgr.Caution_Text.text = curStep.cautionNotes.ToString();*/
+
+        stepsMgr.cautionHeader.SetActive(false);
+
         stepsMgr.Caution_Text.text = curStep.cautionNotes.ToString();
 
 
-     progressBar.SetScrollPosPrev();
+        stepinfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
+        stepinfo.fontStyle = FontStyle.Normal;
+        stepinfo.color = Color.green;
+        stepinfo.GetComponentInParent<SwitchStepState>().IsOn(false);
+
+
+        progressBar.SetScrollPosPrev();
         //REVERSE CURRENT STEP
         partLocated = false;
-        if (currentStep >= 0) {
+      /*  if (currentStep >= 0) {
             if (!GetStepAt(currentStep).isLocked) {
                 AnimRewind(GetCurrentStep());
-                FastTraversalV2(GetCurrentStep(), 0);
+               FastTraversalV2(GetCurrentStep(), 0);
             }
-        }
+        }*/
         // REVERSE HALF OF PREV STEP
         currentStep--;
         if (currentStep < 0)
@@ -512,19 +526,57 @@ public class Steps : MonoBehaviour {
             }
         }
         Step d = GetCurrentStep();
-        
-        FastTraversalV2(d, 0);
+
+        //  FastTraversalV2(d, 0);
         // Run
         // s(GetCurrentStep(), false);
-        //    FastTraversalV2(GetCurrentStep(), 0);
-       // highlighter.RemoveHighLight();
-        LocatePartv2();
-        partLocated = true;
+          // FastTraversalV2(GetCurrentStep(), 0);
+        // highlighter.RemoveHighLight();
+        // LocatePartv2();
+        //  partLocated = true;
         //progressBar.SetScrollPosPrev();
+
+        if (curStep.isLocked)
+        {
+            Debug.LogError("CURRENT STEP IS LOCKED?");
+        }
+        else
+        {
+            playVoiceOver(curStep.voiceOver);
+            // check and stop highlighting the button
+            if (stepsMgr.nextBtn.GetComponent<iTween>() != null)
+            {
+                DestroyImmediate(stepsMgr.nextBtn.GetComponent<iTween>());
+                stepsMgr.nextBtn.transform.localScale = Vector3.one;
+            }
+
+            HighLightCurrentStepObject(curStep.objsToHighlight);
+            //ToggleHighlight(curStep.objsToHighlight,true);
+            ToggleObjects(curStep.objsToEnable, true);
+
+            Debug.LogError("Part Not Locate");
+            Debug.Log(" Switch Caution note ");
+            if (curStep.cautionNotes == "")
+            {
+                SwitchCautionNote(false);
+            }
+            else
+            {
+                SwitchCautionNote(true);
+            }
+            partLocated = false;
+            CompleteV2();
+
+        }
         _updateStep();
-       
-        // progressBar.SetScrollPosPrev();
-        //stepsMgr.mainCamEx.enableLookAt = true;
+
+        if (curStep.isUserinteraction == false && curStep.isToolAttached == false)
+        {
+            //   currentStep++;
+            stepsMgr.nextBtn.GetComponent<Button>().interactable = true;
+            // stepsMgr.nextBtn.SetActive(true);
+        }
+     
 
     }
  
@@ -562,14 +614,126 @@ public class Steps : MonoBehaviour {
     }
     bool LocateStepEmpty = false;
     Text previousStepInfo;
+    Text nextStepInfo;
 
     void playVoiceOver(AudioClip audioClip)
     {
         stepsMgr.audioSource.clip = audioClip;
         stepsMgr.audioSource.PlayDelayed(1.5f);
     }
+
+    public void Previous_New()
+    {
+        currentStep--;
+        if (currentStep > 0)
+        {
+            ToggleObjects(steps[currentStep].objsToDisable, true);
+            ToggleObjects(steps[currentStep+1].objsToEnable, false);
+            if (steps[currentStep + 1].isToolAttached==true)
+            {
+                for (int i = 0; i < steps[currentStep + 1].vr_toolsAttch.Length; i++)
+                {
+                    if (steps[currentStep + 1].vr_toolsAttch[i].tag == "tool")
+                    {
+                        steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+                    }
+                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
+                }
+            }
+          
+        }
+        //   stepsMgr.prevBtn.GetComponent<Button>().interactable = false;
+        totalSteps = GetTotalSteps();
+
+        if (currentStep < 0)
+            currentStep = 0;
+        if (currentStep >= totalSteps)
+            currentStep = totalSteps - 1;
+        while (GetCurrentStep().isLocked && currentStep < totalSteps - 1)
+        {
+            currentStep--;
+        }
+        Step curStep = GetCurrentStep();
+     
+        stepsMgr.cautionHeader.SetActive(false);
+    
+        stepsMgr.Caution_Text.text = curStep.cautionNotes.ToString();
+    
+
+        stepinfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
+        stepinfo.fontStyle = FontStyle.Normal;
+        stepinfo.color = Color.green;
+        stepinfo.GetComponentInParent<SwitchStepState>().IsOn(false);
+
+        if (curStep.animatedObject!=null)
+        {
+            CheckReversal(curStep.animatedObject.gameObject);
+        }
+       
+
+        if (currentStep > 0)
+        {
+            nextStepInfo = loadedStepsInfo[currentStep + 1].transform.GetChild(1).GetComponent<Text>();
+            if (nextStepInfo != null)
+            {
+                nextStepInfo.fontStyle = FontStyle.Normal;
+                nextStepInfo.color = Color.grey;
+                nextStepInfo.GetComponentInParent<SwitchStepState>().IsOn(true);
+            }
+        }
+        progressBar.SetScrollPosPrev();
+
+        if (curStep.locateObjectText == "")
+        {
+            Debug.Log(" Locate Text Empty " + partLocated);
+            partLocated = false;
+        }
+
+        if (curStep.isLocked)
+        {
+            Debug.LogError("CURRENT STEP IS LOCKED?");
+        }
+        else
+        {
+            playVoiceOver(curStep.voiceOver);
+            // check and stop highlighting the button
+          /*  if (stepsMgr.nextBtn.GetComponent<iTween>() != null)
+            {
+                DestroyImmediate(stepsMgr.nextBtn.GetComponent<iTween>());
+                stepsMgr.nextBtn.transform.localScale = Vector3.one;
+            }*/
+
+            HighLightCurrentStepObject(curStep.objsToHighlight);
+            //ToggleHighlight(curStep.objsToHighlight,true);
+            ToggleObjects(curStep.objsToEnable, true);
+
+            Debug.LogError("Part Not Locate");
+            Debug.Log(" Switch Caution note ");
+            if (curStep.cautionNotes == "")
+            {
+                SwitchCautionNote(false);
+            }
+            else
+            {
+                SwitchCautionNote(true);
+            }
+            partLocated = false;
+            CompleteV2();
+            //    }
+
+        }
+
+        _updateStep();
+        if (curStep.isUserinteraction == false && curStep.isToolAttached == false)
+        {
+         //   currentStep++;
+            stepsMgr.nextBtn.GetComponent<Button>().interactable = true;
+            // stepsMgr.nextBtn.SetActive(true);
+        }
+    }
     public void Next()
     {
+        currentStep++;
         if (currentStep>0)
         {
             ToggleObjects(steps[currentStep - 1].objsToDisable, false);
@@ -577,7 +741,8 @@ public class Steps : MonoBehaviour {
        
         //stepsMgr.StepNumber.text =currentStep.ToString();
         //Debug.Log("Total Step...." + totalSteps);
-        stepsMgr.nextBtn.SetActive(false);
+       // stepsMgr.nextBtn.SetActive(false);
+        stepsMgr.nextBtn.GetComponent<Button>().interactable=false;
         totalSteps = GetTotalSteps();
         if (currentStep < 0)
             currentStep = 0;
@@ -588,7 +753,7 @@ public class Steps : MonoBehaviour {
             currentStep++;
         }
         Step curStep = GetCurrentStep();
-        Debug.LogError("Current Step detail " + curStep.cautionNotes.ToString());
+       // Debug.LogError("Current Step detail " + curStep.cautionNotes.ToString());
         /*  if (curStep.locateObjectText == "")
           {
               stepsMgr.OnNext();
@@ -601,9 +766,9 @@ public class Steps : MonoBehaviour {
         // stepsMgr.clickOnNextOrPreviousButton();
         
         stepinfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
-        stepinfo.fontStyle = FontStyle.Bold;
-        stepinfo.color = Color.black;
-        stepinfo.GetComponentInParent<SwitchStepState>().IsOn(false);
+        stepinfo.fontStyle = FontStyle.Normal;
+        stepinfo.color = Color.green;
+        stepinfo.GetComponentInParent<SwitchStepState>().IsOn(true);
 
 
         if (currentStep > 0)
@@ -611,11 +776,12 @@ public class Steps : MonoBehaviour {
             previousStepInfo = loadedStepsInfo[currentStep - 1].transform.GetChild(1).GetComponent<Text>();
             if (previousStepInfo != null)
             {
-                previousStepInfo.fontStyle = FontStyle.Bold;
-                previousStepInfo.color = Color.green;
-                previousStepInfo.GetComponentInParent<SwitchStepState>().IsOn(true);
+                previousStepInfo.fontStyle = FontStyle.Normal;
+                previousStepInfo.color = Color.grey;
+                previousStepInfo.GetComponentInParent<SwitchStepState>().IsOn(false);
             }
         }
+        progressBar.SetScrollPosNext();
 
         if (curStep.locateObjectText == "")
         {
@@ -640,72 +806,9 @@ public class Steps : MonoBehaviour {
             HighLightCurrentStepObject(curStep.objsToHighlight);
             //ToggleHighlight(curStep.objsToHighlight,true);
             ToggleObjects(curStep.objsToEnable, true);
-            /*   if (!partLocated)
-               {
+          
 
-                   Debug.LogError("Part Locate");
-
-                   FastTraversalV2(curStep, 1);
-                   {
-                       *//*if (currentStep > 0)
-                       {
-                           previousStepInfo = loadedStepsInfo[currentStep - 1].transform.GetChild(1).GetComponent<Text>();
-                           if (previousStepInfo != null)
-                           {
-                               previousStepInfo.fontStyle = FontStyle.Bold;
-                               previousStepInfo.color = Color.grey;
-                               previousStepInfo.GetComponentInParent<Toggle>().isOn = true;
-                           }
-                       }
-   *//*
-
-                       currentStep++;
-                       if (currentStep > 0)
-                       {                       
-                           previousStepInfo = loadedStepsInfo[currentStep - 1].transform.GetChild(1).GetComponent<Text>();
-                           if (previousStepInfo != null)
-                           {
-                               previousStepInfo.fontStyle = FontStyle.Bold;
-                               previousStepInfo.color = Color.grey;
-                               previousStepInfo.GetComponentInParent<ToggleUI>().IsOn(true);
-                               progressBar.SetScrollPosNext();
-
-                           }
-                          *//* if (sidePanal && currentStep <= steps.Count - 2)
-                           {
-                               if (steps[currentStep].toolSprite.Length != 0 || steps[currentStep].cautionNotes.Length != 0)
-                               {
-                                   if (sidePanal.GetComponent<RectTransform>().anchoredPosition.x >= 543.7f)
-                                       sidePanal.SetSidePanalAnimationStatus("RnROpen");
-                               }
-                               else
-                               {
-                                   if (sidePanal.GetComponent<RectTransform>().anchoredPosition.x <= 0)
-                                       sidePanal.SetSidePanalAnimationStatus("RnRClose");
-                               }
-
-                           }*//*
-                       }
-
-                   }
-
-
-                   while (GetCurrentStep().isLocked && currentStep < totalSteps - 1)
-                   {
-                       currentStep++;
-                   }
-
-                   if (!GetCurrentStep().isLocked)
-                   {
-                       LocatePartv2();
-                       partLocated = true;
-                   }
-
-                 }
-               else
-               {*/
-
-            Debug.LogError("Part Not Locate");
+           // Debug.LogError("Part Not Locate");
                 Debug.Log(" Switch Caution note ");
                 if (curStep.cautionNotes == "")
                 {
@@ -724,8 +827,9 @@ public class Steps : MonoBehaviour {
         _updateStep();
         if (curStep.isUserinteraction==false&&curStep.isToolAttached==false)
         {
-            currentStep++;
-            stepsMgr.nextBtn.SetActive(true);
+          //  currentStep++;
+           // stepsMgr.nextBtn.SetActive(true);
+            stepsMgr.nextBtn.GetComponent<Button>().interactable = true;
         }
        
 
@@ -1034,7 +1138,6 @@ public class Steps : MonoBehaviour {
             cmpStep.animatedObject.enabled = true;
             cmpStep.animatedObject.speed = auto ? animSpeed : 1f;
             cmpStep.animatedObject.SetTrigger(cmpStep.animTriggerName);
-    
         }
         else 
         {
@@ -1085,19 +1188,19 @@ public class Steps : MonoBehaviour {
             if (step.animatedObject != null)
             {
                 currentAnim = step.animatedObject;
-                step.animatedObject.enabled = true;
+            step.animatedObject.enabled = true;
                 step.animatedObject.speed = auto ? animSpeed : 1f;
                 step.animatedObject.SetTrigger(step.animTriggerName);
             }
 
         step.vr_Interactable.GetComponent<XRSimpleInteractable>().enabled = false;
-        stepsMgr.nextBtn.SetActive(true);
-        
-        currentStep++;
+       // stepsMgr.nextBtn.SetActive(true);
+        stepsMgr.nextBtn.GetComponent<Button>().interactable = true;
+      //  currentStep++;
     }
     public void userToolsInteraction(SelectEnterEventArgs args)
     {
-        
+       
         Step step = GetCurrentStep();
         Debug.Log("  Tool Placed ------------ "+ step.animTriggerName);
         if (step.animatedObject != null)
@@ -1107,11 +1210,20 @@ public class Steps : MonoBehaviour {
             step.animatedObject.speed = auto ? animSpeed : 1f;
             step.animatedObject.SetTrigger(step.animTriggerName);
         }
-        step.vr_toolsAttch[0].SetActive(false);
-        step.vr_toolsAttch[1].SetActive(false);
-        stepsMgr.nextBtn.SetActive(true);
-      
-        currentStep++;
+
+        for (int i = 0; i < step.vr_toolsAttch.Length; i++)
+        {
+        /*    if (step.vr_toolsAttch[i].tag == "tool")
+            {
+                step.vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+            }*/
+            step.vr_toolsAttch[i].SetActive(false);
+        }
+       
+      //  stepsMgr.nextBtn.SetActive(true);
+        stepsMgr.nextBtn.GetComponent<Button>().interactable = true;
+
+       // currentStep++;
     }
     void AnimRewind(Step thisStep) => SkipAnim(thisStep, 0);
     void AnimForward(Step thisStep) => SkipAnim(thisStep, 1);

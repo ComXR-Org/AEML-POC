@@ -97,7 +97,7 @@ public class RnR_ScrollHandler : MonoBehaviour
     float GetContentSizetoscroll(int stepNumber)
     {
         float scrollValue = 0;
-        Debug.LogError(" abs " + Mathf.Abs(stepScript.loadedStepsInfo[currentStep].GetComponent<RectTransform>().localPosition.y));
+       // Debug.LogError(" abs " + Mathf.Abs(stepScript.loadedStepsInfo[currentStep].GetComponent<RectTransform>().localPosition.y));
         scrollValue = Mathf.Abs(stepScript.loadedStepsInfo[currentStep].GetComponent<RectTransform>().localPosition.y) - stepScript.loadedStepsInfo[currentStep].GetComponent<RectTransform>().sizeDelta.y;
         Debug.Log("Scroll Up position -- " + scrollValue);
         return scrollValue;
@@ -110,7 +110,11 @@ public class RnR_ScrollHandler : MonoBehaviour
         }
         currentStep = stepScript.currentStep;
         numberOfItems = stepScript.steps.Count;
-        if (currentStep >= 0)
+        if (currentStep == 0)
+        {
+            content.localPosition = new Vector3(content.localPosition.x, 0, content.localPosition.z);
+        }
+        if (currentStep > 0)
         {
             content.localPosition = new Vector3(content.localPosition.x, GetContentSizetoscroll(currentStep), content.localPosition.z);
         }
