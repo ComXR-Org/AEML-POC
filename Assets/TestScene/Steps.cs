@@ -73,7 +73,7 @@ public class Steps : MonoBehaviour {
     //  [SerializeField]
     public bool partLocated = false;
     bool triggeredNext = false;
-    Animator currentAnim;
+    public Animator currentAnim;
     GameObject replayButton;
     #endregion
 
@@ -213,7 +213,7 @@ public class Steps : MonoBehaviour {
     {
         foreach (Step st in steps)
         {
-            Debug.Log("  Steps Number  " + st.stepInstructions);
+          //  Debug.Log("  Steps Number  " + st.stepInstructions);
             if (st.stepInstructions != "Process Complete")
             {
                 if (st.objsToHighlight.Length > 0)
@@ -365,7 +365,7 @@ public class Steps : MonoBehaviour {
                 StartCoroutine(HighlightNextBtn());
                 triggeredNext = true;
                 currentAnim = null;
-                StartCoroutine(SkipToNext(0.5f));
+              StartCoroutine(SkipToNext(0.5f));
             }
         }
         /*if(!UI.activeInHierarchy)
@@ -625,19 +625,22 @@ public class Steps : MonoBehaviour {
     public void Previous_New()
     {
         currentStep--;
+        Debug.LogError(" step num " + currentStep);
         if (currentStep > 0)
         {
             ToggleObjects(steps[currentStep].objsToDisable, true);
             ToggleObjects(steps[currentStep+1].objsToEnable, false);
+            AnimRewind(steps[currentStep + 1]);
             if (steps[currentStep + 1].isToolAttached==true)
             {
                 for (int i = 0; i < steps[currentStep + 1].vr_toolsAttch.Length; i++)
                 {
+                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
                     if (steps[currentStep + 1].vr_toolsAttch[i].tag == "tool")
                     {
                         steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
                     }
-                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
+                   
                 }
             }
           
@@ -658,18 +661,22 @@ public class Steps : MonoBehaviour {
         stepsMgr.cautionHeader.SetActive(false);
     
         stepsMgr.Caution_Text.text = curStep.cautionNotes.ToString();
-    
 
         stepinfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
         stepinfo.fontStyle = FontStyle.Normal;
-        stepinfo.color = Color.green;
-        stepinfo.GetComponentInParent<SwitchStepState>().IsOn(false);
+        stepinfo.color = Color.white;
+        stepinfo.GetComponentInParent<SwitchStepState>().IsOn(true);
 
-        if (curStep.animatedObject!=null)
+      /*  if (curStep.animatedObject != null)
         {
-            CheckReversal(curStep.animatedObject.gameObject);
-        }
-       
+            currentAnim = curStep.animatedObject;
+            currentAnim.Update(0f);
+        }*/
+        /*    if (curStep.animatedObject!=null)
+            {
+                CheckReversal(curStep.animatedObject.gameObject);
+            }*/
+
 
         if (currentStep > 0)
         {
@@ -678,7 +685,7 @@ public class Steps : MonoBehaviour {
             {
                 nextStepInfo.fontStyle = FontStyle.Normal;
                 nextStepInfo.color = Color.grey;
-                nextStepInfo.GetComponentInParent<SwitchStepState>().IsOn(true);
+                nextStepInfo.GetComponentInParent<SwitchStepState>().IsOn(false);
             }
         }
         progressBar.SetScrollPosPrev();
@@ -695,6 +702,7 @@ public class Steps : MonoBehaviour {
         }
         else
         {
+            AnimRewind(GetCurrentStep());
             playVoiceOver(curStep.voiceOver);
             // check and stop highlighting the button
           /*  if (stepsMgr.nextBtn.GetComponent<iTween>() != null)
@@ -734,9 +742,12 @@ public class Steps : MonoBehaviour {
     public void Next()
     {
         currentStep++;
+        Debug.LogError(" step num " + currentStep);
         if (currentStep>0)
         {
+           
             ToggleObjects(steps[currentStep - 1].objsToDisable, false);
+            AnimForward(steps[currentStep - 1]);
         }
        
         //stepsMgr.StepNumber.text =currentStep.ToString();
@@ -753,12 +764,6 @@ public class Steps : MonoBehaviour {
             currentStep++;
         }
         Step curStep = GetCurrentStep();
-       // Debug.LogError("Current Step detail " + curStep.cautionNotes.ToString());
-        /*  if (curStep.locateObjectText == "")
-          {
-              stepsMgr.OnNext();
-              return;
-          }*/
         stepsMgr.cautionHeader.SetActive(false);
        // stepsMgr.cautionLine.SetActive(false);
         // Debug.LogError("Current Step "+ curStep.cautionNotes.ToString());
@@ -767,7 +772,7 @@ public class Steps : MonoBehaviour {
         
         stepinfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
         stepinfo.fontStyle = FontStyle.Normal;
-        stepinfo.color = Color.green;
+        stepinfo.color = Color.white;
         stepinfo.GetComponentInParent<SwitchStepState>().IsOn(true);
 
 
@@ -795,6 +800,7 @@ public class Steps : MonoBehaviour {
         }
         else
         {
+            AnimRewind(GetCurrentStep());
             playVoiceOver(curStep.voiceOver);
             // check and stop highlighting the button
             if (stepsMgr.nextBtn.GetComponent<iTween>() != null)
@@ -806,10 +812,14 @@ public class Steps : MonoBehaviour {
             HighLightCurrentStepObject(curStep.objsToHighlight);
             //ToggleHighlight(curStep.objsToHighlight,true);
             ToggleObjects(curStep.objsToEnable, true);
-          
 
-           // Debug.LogError("Part Not Locate");
-                Debug.Log(" Switch Caution note ");
+            if (currentStep > 0)
+            {
+                ToggleObjects(steps[currentStep - 1].objsToDisable, false);
+            }
+
+            // Debug.LogError("Part Not Locate");
+            Debug.Log(" Switch Caution note ");
                 if (curStep.cautionNotes == "")
                 {
                     SwitchCautionNote(false);
@@ -1112,40 +1122,47 @@ public class Steps : MonoBehaviour {
             LocateStepEmpty = false;
         }
         // disable highlight for current step
-      /*  if (!keepHighlightForAnimation)
-            highlighter.RemoveHighLight();*/
-       // SetCameraPositionV2(cmpStep);
+        /*  if (!keepHighlightForAnimation)
+              highlighter.RemoveHighLight();*/
+        // SetCameraPositionV2(cmpStep);
         // set the description
         //stepsMgr.stepDesc.text = cmpStep.stepInstructions;
-     /*   if (currentProcess == Process.Dismantling) {
-            ToggleCurvedLineDelay(steps[currentStep].curvedLineObjs, true);
-            lastStep = currentStep;
-        } else {
-            ToggleCurvedLineDelay(assemblySteps[currentStep].curvedLineObjs, true);
-            lastStep = currentStep;
-        }*/
+        /*   if (currentProcess == Process.Dismantling) {
+               ToggleCurvedLineDelay(steps[currentStep].curvedLineObjs, true);
+               lastStep = currentStep;
+           } else {
+               ToggleCurvedLineDelay(assemblySteps[currentStep].curvedLineObjs, true);
+               lastStep = currentStep;
+           }*/
 
         // Play VO
-      /*  if (cmpStep.voiceOver != null && GetComponent<AudioSource>() != null) {
-            GetComponent<AudioSource>().clip = cmpStep.voiceOver;
-            GetComponent<AudioSource>().Play();
-        }*/
+        /*  if (cmpStep.voiceOver != null && GetComponent<AudioSource>() != null) {
+              GetComponent<AudioSource>().clip = cmpStep.voiceOver;
+              GetComponent<AudioSource>().Play();
+          }*/
 
-        
+    /*    if (currentAnim != null)
+        {
+            currentAnim.Update(1000f);
+            currentAnim = null;
+
+        }
+*/
         // start animation
         if (cmpStep.animatedObject != null && cmpStep.isUserinteraction==false && cmpStep.isToolAttached==false) {
-            currentAnim = cmpStep.animatedObject;
+
             cmpStep.animatedObject.enabled = true;
             cmpStep.animatedObject.speed = auto ? animSpeed : 1f;
             cmpStep.animatedObject.SetTrigger(cmpStep.animTriggerName);
+            // cmpStep.animatedObject.ResetTrigger(cmpStep.animTriggerName);
+            currentAnim = cmpStep.animatedObject;
+
         }
         else 
         {
             if (cmpStep.isUserinteraction == true)
             {
-
                 cmpStep.vr_Interactable.GetComponent<XRSimpleInteractable>().enabled=true;
-
             }
 
             if (cmpStep.isToolAttached == true)
@@ -1187,11 +1204,11 @@ public class Steps : MonoBehaviour {
             Step step = GetCurrentStep();
             if (step.animatedObject != null)
             {
-                currentAnim = step.animatedObject;
-            step.animatedObject.enabled = true;
+                step.animatedObject.enabled = true;
                 step.animatedObject.speed = auto ? animSpeed : 1f;
                 step.animatedObject.SetTrigger(step.animTriggerName);
-            }
+                currentAnim = step.animatedObject;
+        }
 
         step.vr_Interactable.GetComponent<XRSimpleInteractable>().enabled = false;
        // stepsMgr.nextBtn.SetActive(true);
@@ -1282,7 +1299,10 @@ public class Steps : MonoBehaviour {
         if (objs != null)
             foreach (GameObject g in objs) {
                 if (g != null)
+                {
+                    Debug.Log("  Off  Gameobject "+g.name);
                     g.SetActive(isOn);
+                }
                 else
                     Debug.Log("Null Element found in Step:" + currentStep + " of " + currentProcess.ToString());
             }
