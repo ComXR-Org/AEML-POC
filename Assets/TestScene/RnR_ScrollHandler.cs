@@ -79,11 +79,24 @@ public class RnR_ScrollHandler : MonoBehaviour
     public int numberOfItems;
     public int currentStep;
     [SerializeField] private Steps stepScript;
+    private void Start()
+    {
+        if (!stepScript)
+        {
+            stepScript = FindObjectOfType<Steps>();
+            currentStep = 0;
+        }
+
+    }
     // Start is called before the first frame update
     void OnEnable()
     {
-        stepScript = FindObjectOfType<Steps>();
-        currentStep = 0;
+        if (!stepScript)
+        {
+            stepScript = FindObjectOfType<Steps>();
+            currentStep = 0;
+        }
+
     }
     public void SetScrollPosNext()
     {
