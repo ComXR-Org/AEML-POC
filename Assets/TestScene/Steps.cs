@@ -635,12 +635,15 @@ public class Steps : MonoBehaviour {
             {
                 for (int i = 0; i < steps[currentStep + 1].vr_toolsAttch.Length; i++)
                 {
-                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
+                   
                     if (steps[currentStep + 1].vr_toolsAttch[i].tag == "tool")
                     {
-                        steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+                       steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+                       steps[currentStep + 1].vr_toolsAttch[i].transform.localRotation = stepsMgr.toolSpwanPos.localRotation;
                     }
-                   
+
+                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
+
                 }
             }
           
