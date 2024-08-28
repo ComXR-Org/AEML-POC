@@ -343,9 +343,9 @@ public class Steps : MonoBehaviour {
         //  if(currentProcess==Process.Assembly)
         if (useStepPlayer)
         {
-            SetProcess(Process.Dismantling);
+         //   SetProcess(Process.Dismantling);
            // Previous();
-           Previous_New();
+         //   Previous_New();
             progressBar.SetScrollPosPrev();
         }
         else

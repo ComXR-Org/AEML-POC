@@ -110,7 +110,7 @@ public class RnR_ScrollHandler : MonoBehaviour
         }
         currentStep = stepScript.currentStep;
         numberOfItems = stepScript.steps.Count;
-        if (currentStep == 0)
+        if (currentStep == 0 || currentStep == -1)
         {
             content.localPosition = new Vector3(content.localPosition.x, 0, content.localPosition.z);
         }
