@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -25,6 +26,7 @@ public class Step {
     public GameObject[] objsToHighlight;
     public GameObject[] objsToDisable;
     public GameObject[] objsToEnable;
+    public GameObject[] objsToE_D;
     public GameObject[] curvedLineObjs;
     [TextArea]
     public string cautionNotes="";
@@ -38,6 +40,7 @@ public class Step {
     [Space(10)]
     public bool isToolAttached;
     public GameObject[] vr_toolsAttch;
+    public GameObject[] objDisableForVR;
     
     // public StepsEximProcessor.StepData data;
 }
@@ -343,7 +346,7 @@ public class Steps : MonoBehaviour {
         //  if(currentProcess==Process.Assembly)
         if (useStepPlayer)
         {
-         //   SetProcess(Process.Dismantling);
+         //  SetProcess(Process.Dismantling);
            // Previous();
          //   Previous_New();
             progressBar.SetScrollPosPrev();
@@ -365,7 +368,7 @@ public class Steps : MonoBehaviour {
                 StartCoroutine(HighlightNextBtn());
                 triggeredNext = true;
                 currentAnim = null;
-              StartCoroutine(SkipToNext(0.5f));
+             //StartCoroutine(SkipToNext(0.5f));
             }
         }
         /*if(!UI.activeInHierarchy)
@@ -625,31 +628,56 @@ public class Steps : MonoBehaviour {
     public void Previous_New()
     {
         currentStep--;
-        Debug.LogError(" step num " + currentStep);
-        if (currentStep > 0)
+      
+     
+        ToggleObjects(steps[currentStep].objsToDisable, true);
+        ToggleObjects(steps[currentStep + 1].objsToEnable, false);
+        ToggleObjects(steps[currentStep + 1].objsToE_D, false);
+        AnimRewind(steps[currentStep + 1]);
+        if (steps[currentStep + 1].isUserinteraction == true)
         {
-            ToggleObjects(steps[currentStep].objsToDisable, true);
-            ToggleObjects(steps[currentStep+1].objsToEnable, false);
-            AnimRewind(steps[currentStep + 1]);
-            if (steps[currentStep + 1].isToolAttached==true)
+            Transform[] findarrow = steps[currentStep + 1].vr_Interactable.GetComponentsInChildren<Transform>(true);
+
+            foreach (Transform item in findarrow)
             {
-                for (int i = 0; i < steps[currentStep + 1].vr_toolsAttch.Length; i++)
+                if (item.gameObject.name.Contains("Arrow"))
                 {
-                   
-                    if (steps[currentStep + 1].vr_toolsAttch[i].tag == "tool")
-                    {
-                       steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
-                       steps[currentStep + 1].vr_toolsAttch[i].transform.localRotation = stepsMgr.toolSpwanPos.localRotation;
-                    }
-
-                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
-
+                    item.gameObject.SetActive(false);
                 }
+
             }
-          
         }
-        //   stepsMgr.prevBtn.GetComponent<Button>().interactable = false;
-        totalSteps = GetTotalSteps();
+
+        if (steps[currentStep + 1].isToolAttached == true)
+        {
+            ToggleObjects(steps[currentStep + 1].objDisableForVR, false);
+            for (int i = 0; i < steps[currentStep + 1].vr_toolsAttch.Length; i++)
+            {
+
+                if (steps[currentStep + 1].vr_toolsAttch[i].tag == "tool")
+                {
+                    steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+                    steps[currentStep + 1].vr_toolsAttch[i].transform.localRotation = stepsMgr.toolSpwanPos.localRotation;
+                 //   steps[currentStep + 1].vr_toolsAttch[i].transform.GetComponent<ToolPosStore_VR>().resetPos();
+                }
+
+                steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
+
+            }
+        }
+
+        Debug.LogError(" step num " + currentStep);
+       /* if (currentStep < 0)
+        {
+            Debug.LogError(" step num --1");
+          
+            AnimRewind(steps[currentStep]);
+           // ToggleObjects(steps[currentStep].objsToDisable, true);
+
+        }*/
+        Debug.LogError(" step num --2");
+          stepsMgr.nextBtn.GetComponent<Button>().interactable = false;
+            totalSteps = GetTotalSteps();
 
         if (currentStep < 0)
             currentStep = 0;
@@ -659,6 +687,7 @@ public class Steps : MonoBehaviour {
         {
             currentStep--;
         }
+        Debug.LogError(" step num --3");
         Step curStep = GetCurrentStep();
      
         stepsMgr.cautionHeader.SetActive(false);
@@ -669,12 +698,12 @@ public class Steps : MonoBehaviour {
         stepinfo.fontStyle = FontStyle.Normal;
         stepinfo.color = Color.white;
         stepinfo.GetComponentInParent<SwitchStepState>().IsOn(true);
-
-      /*  if (curStep.animatedObject != null)
-        {
-            currentAnim = curStep.animatedObject;
-            currentAnim.Update(0f);
-        }*/
+        Debug.LogError(" step num --4");
+        /*  if (curStep.animatedObject != null)
+          {
+              currentAnim = curStep.animatedObject;
+              currentAnim.Update(0f);
+          }*/
         /*    if (curStep.animatedObject!=null)
             {
                 CheckReversal(curStep.animatedObject.gameObject);
@@ -708,17 +737,22 @@ public class Steps : MonoBehaviour {
             AnimRewind(GetCurrentStep());
             playVoiceOver(curStep.voiceOver);
             // check and stop highlighting the button
-          /*  if (stepsMgr.nextBtn.GetComponent<iTween>() != null)
-            {
-                DestroyImmediate(stepsMgr.nextBtn.GetComponent<iTween>());
-                stepsMgr.nextBtn.transform.localScale = Vector3.one;
-            }*/
+            /*  if (stepsMgr.nextBtn.GetComponent<iTween>() != null)
+              {
+                  DestroyImmediate(stepsMgr.nextBtn.GetComponent<iTween>());
+                  stepsMgr.nextBtn.transform.localScale = Vector3.one;
+              }*/
 
-            HighLightCurrentStepObject(curStep.objsToHighlight);
+            if (curStep.objsToHighlight.Length>0)
+            {
+                HighLightCurrentStepObject(curStep.objsToHighlight);
+            }
+           
             //ToggleHighlight(curStep.objsToHighlight,true);
             ToggleObjects(curStep.objsToEnable, true);
-
-            Debug.LogError("Part Not Locate");
+            ToggleObjects(curStep.objsToE_D, true);
+            ToggleObjects(curStep.objDisableForVR, true);
+            //Debug.LogError("Part Not Locate");
             Debug.Log(" Switch Caution note ");
             if (curStep.cautionNotes == "")
             {
@@ -748,9 +782,40 @@ public class Steps : MonoBehaviour {
         Debug.LogError(" step num " + currentStep);
         if (currentStep>0)
         {
-           
             ToggleObjects(steps[currentStep - 1].objsToDisable, false);
+            ToggleObjects(steps[currentStep - 1].objsToE_D, false);
             AnimForward(steps[currentStep - 1]);
+
+            if (steps[currentStep - 1].isUserinteraction == true)
+            {
+                Transform[] findarrow = steps[currentStep - 1].vr_Interactable.GetComponentsInChildren<Transform>(true);
+
+                foreach (Transform item in findarrow)
+                {
+                    if (item.gameObject.name.Contains("Arrow"))
+                    {
+                        item.gameObject.SetActive(false);
+                    }
+
+                }
+            }
+
+            if (steps[currentStep - 1].isToolAttached == true)
+            {
+                ToggleObjects(steps[currentStep - 1].objDisableForVR, false);
+                for (int i = 0; i < steps[currentStep + 1].vr_toolsAttch.Length; i++)
+                {
+
+                    if (steps[currentStep + 1].vr_toolsAttch[i].tag == "tool")
+                    {
+                        steps[currentStep + 1].vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+                        steps[currentStep + 1].vr_toolsAttch[i].transform.localRotation = stepsMgr.toolSpwanPos.localRotation;
+                    }
+
+                    steps[currentStep + 1].vr_toolsAttch[i].SetActive(false);
+
+                }
+            }
         }
        
         //stepsMgr.StepNumber.text =currentStep.ToString();
@@ -767,6 +832,8 @@ public class Steps : MonoBehaviour {
             currentStep++;
         }
         Step curStep = GetCurrentStep();
+
+       
         stepsMgr.cautionHeader.SetActive(false);
        // stepsMgr.cautionLine.SetActive(false);
         // Debug.LogError("Current Step "+ curStep.cautionNotes.ToString());
@@ -811,11 +878,15 @@ public class Steps : MonoBehaviour {
                 DestroyImmediate(stepsMgr.nextBtn.GetComponent<iTween>());
                 stepsMgr.nextBtn.transform.localScale = Vector3.one;
             }
-         
-            HighLightCurrentStepObject(curStep.objsToHighlight);
+
+            if (curStep.objsToHighlight.Length > 0)
+            {
+                HighLightCurrentStepObject(curStep.objsToHighlight);
+            }
             //ToggleHighlight(curStep.objsToHighlight,true);
             ToggleObjects(curStep.objsToEnable, true);
-
+            ToggleObjects(curStep.objsToE_D, true);
+            ToggleObjects(curStep.objDisableForVR, true);
             if (currentStep > 0)
             {
                 ToggleObjects(steps[currentStep - 1].objsToDisable, false);
@@ -1165,6 +1236,17 @@ public class Steps : MonoBehaviour {
         {
             if (cmpStep.isUserinteraction == true)
             {
+                Transform[] findarrow = cmpStep.vr_Interactable.GetComponentsInChildren<Transform>(true);
+
+                foreach (Transform item in findarrow)
+                {
+                    if (item.gameObject.name.Contains("Arrow"))
+                    {
+                        item.gameObject.SetActive(true);
+                    }
+
+                }
+                //cmpStep.vr_Interactable.transform.GetChild(0).gameObject.SetActive(true);
                 cmpStep.vr_Interactable.GetComponent<XRSimpleInteractable>().enabled=true;
             }
 
@@ -1187,13 +1269,15 @@ public class Steps : MonoBehaviour {
         }
         if (currentStep == steps.Count - 1)
         {
-            previousStepInfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
+            /*previousStepInfo = loadedStepsInfo[currentStep].transform.GetChild(1).GetComponent<Text>();
             if (previousStepInfo != null)
             {
-                previousStepInfo.GetComponentInParent<ToggleUI>().IsOn(true);
-            }
+                previousStepInfo.GetComponentInParent<ToggleUI>().IsOn(false);
+            }*/
             stepsMgr.completeProccessTask.SetActive(true);
-            //  currentStep = 0;
+            stepsMgr.VR_UI.SetActive(false);
+            currentStep = -1;
+            progressBar.SetScrollPosPrev();
         }
         else
         {
@@ -1201,11 +1285,28 @@ public class Steps : MonoBehaviour {
         }
     }
 
+   public void RestartSteps()
+    {
+        SceneManager.LoadScene("AEML_RnR_Animation");
+    }
     public void userInteraction(HoverEnterEventArgs args)
         {
-        Debug.Log("  Interacted----- ");
+        
+            Debug.Log("  Interacted----- ");
             Step step = GetCurrentStep();
-            if (step.animatedObject != null)
+
+        Transform[] findarrow = step.vr_Interactable.GetComponentsInChildren<Transform>(true);
+
+        foreach (Transform item in findarrow)
+        {
+            if (item.gameObject.name.Contains("Arrow"))
+            {
+                item.gameObject.SetActive(false);
+            }
+           
+        }
+    
+        if (step.animatedObject != null)
             {
                 step.animatedObject.enabled = true;
                 step.animatedObject.speed = auto ? animSpeed : 1f;
@@ -1213,10 +1314,18 @@ public class Steps : MonoBehaviour {
                 currentAnim = step.animatedObject;
         }
 
+
+
         step.vr_Interactable.GetComponent<XRSimpleInteractable>().enabled = false;
+
        // stepsMgr.nextBtn.SetActive(true);
         stepsMgr.nextBtn.GetComponent<Button>().interactable = true;
-      //  currentStep++;
+        for (int i = 0; i < step.objDisableForVR.Length; i++)
+        {
+        
+            step.objDisableForVR[i].SetActive(false);
+        }
+        //  currentStep++;
     }
     public void userToolsInteraction(SelectEnterEventArgs args)
     {
@@ -1229,6 +1338,16 @@ public class Steps : MonoBehaviour {
             step.animatedObject.enabled = true;
             step.animatedObject.speed = auto ? animSpeed : 1f;
             step.animatedObject.SetTrigger(step.animTriggerName);
+        }
+
+        for (int i = 0; i < step.objDisableForVR.Length; i++)
+        {
+            /*    if (step.vr_toolsAttch[i].tag == "tool")
+                {
+                    step.vr_toolsAttch[i].transform.position = stepsMgr.toolSpwanPos.position;
+                }*/
+          
+            step.objDisableForVR[i].SetActive(false);
         }
 
         for (int i = 0; i < step.vr_toolsAttch.Length; i++)

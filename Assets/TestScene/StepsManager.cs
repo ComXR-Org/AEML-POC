@@ -37,6 +37,7 @@ public class StepsManager : MonoBehaviour {
     public GameObject restartBtnContainer;
     public Steps existingStepScripts;
     public GameObject completeProccessTask;
+    public GameObject VR_UI;
 
     public string stepCSV_filePath="";
     public GameObject divideingLineForStepList;
