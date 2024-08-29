@@ -7,6 +7,8 @@ public class RepostionGrabbleObject : MonoBehaviour
     private Vector3 myPosition;
     private Vector3 myRotation;
 
+  
+
     private void Start()
     {
         this.myPosition = this.transform.position;
