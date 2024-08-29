@@ -9,7 +9,7 @@ public class PlacementIndicator : MonoBehaviour
     public ObjectSpawner ObjectSpawner;
     public ARRaycastManager rayManager;
     public GameObject visual;
-
+    public GameObject PlacementWarring;
     void Start()
     {
         // get the component
@@ -37,11 +37,16 @@ public class PlacementIndicator : MonoBehaviour
 
             if (!visual.activeSelf)
             {
-                visual.SetActive(true);
-                ObjectSpawner.Text.text = transform.position.ToString();
+                visual.SetActive(true);                
             }
                 
         }
+        PlacementWarring.SetActive(visual.activeSelf);
+    }
+
+    private void OnDisable()
+    {
+        PlacementWarring.SetActive(false);
     }
 
 }

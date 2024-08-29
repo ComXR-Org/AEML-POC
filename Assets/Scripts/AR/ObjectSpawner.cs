@@ -20,7 +20,7 @@ public class ObjectSpawner : MonoBehaviour
     //  public BikeZoneInteraction zoneScript;
     public bool isTutorial;
     public ARPlaneManager aRPlaneManager;
-    public TextMeshProUGUI Text;
+    public GameObject MachineUI;
     private void OnEnable()
     {
         //Countdown.gameObject.SetActive(true);
@@ -58,7 +58,6 @@ public class ObjectSpawner : MonoBehaviour
         if (Input.GetMouseButton(0) && plane.activeSelf)
         {
             Activate();
-            Text.text = "Touched";
         }
 
        /* if (isTutorial == false *//*&& Countdown.isCounDownOver == false*//*)
@@ -105,7 +104,6 @@ public class ObjectSpawner : MonoBehaviour
             if (!objectToSpawn.activeSelf)
             {
                 Debug.Log(" spawnOnject null ");
-                Text.text += "\n Object Spwanned";
                 ToggelPlaneEnableDisable();
                 objectToSpawn.SetActive(true);
                 objectToSpawn.transform.position = placementIndicator.transform.position;
@@ -118,12 +116,12 @@ public class ObjectSpawner : MonoBehaviour
                 objectToSpawn.transform.position = placementIndicator.transform.position;
                 objectToSpawn.transform.rotation = placementIndicator.transform.rotation;
                 placementIndicator.gameObject.SetActive(false);
-                Text.text += "\n Position Adjusted";
+                
                 isTracking = false;
             }
 
         }
-
+        MachineUI.SetActive(objectToSpawn.activeSelf);
 
        /* if (isTracking) {  //isTracking will only be true in the start or if Respawn button is pressed
             if (!objectToSpawn.activeSelf)
@@ -173,13 +171,13 @@ public class ObjectSpawner : MonoBehaviour
                 {
                     g.SetActive(true);
                 }*/
-                /*  respawnButton.SetActive(true);*//*
-            }
-            
-            
-            
-        }*/
-        
+        /*  respawnButton.SetActive(true);*//*
+    }
+
+
+
+}*/
+
     }
     public void ReSpawn() {
         /*foreach (GameObject g in sceneObjectOnOff.arScalar)

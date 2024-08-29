@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/AEML_AR.unity
     guid: e07a85071c62a26429d149d694732af1
   - enabled: 0
-    path: Assets/Scenes/AEML_RnR.unity
+    path: Assets/Scenes/AEML_RnR_Fun.unity
     guid: 0eb411f26ab31644394a41d08c6ad7c7
   m_configObjects:
     Unity.XR.OpenVR.Settings: {fileID: 11400000, guid: c705498d7c6e09b4a8997e675434f803,
