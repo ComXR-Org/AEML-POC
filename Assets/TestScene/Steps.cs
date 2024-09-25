@@ -58,7 +58,7 @@ public class Steps : MonoBehaviour {
     [Space(20)]
     public bool auto = false;
     [Range(1, 5)]
-    public int animSpeed = 3;
+    public int animSpeed = 1;
     [Range(0.2f, 3f)]
     public float textDuration = 1f;
 
@@ -1337,6 +1337,7 @@ public class Steps : MonoBehaviour {
             currentAnim = step.animatedObject;
             step.animatedObject.enabled = true;
             step.animatedObject.speed = auto ? animSpeed : 1f;
+
             step.animatedObject.SetTrigger(step.animTriggerName);
         }
 
