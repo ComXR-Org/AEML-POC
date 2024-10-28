@@ -807,7 +807,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: URP_OUTLINE
+    Android: URP_OUTLINE;USE_INPUT_SYSTEM_POSE_CONTROL;USE_STICK_CONTROL_THUMBSTICKS
     EmbeddedLinux: URP_OUTLINE
     GameCoreScarlett: URP_OUTLINE
     GameCoreXboxOne: URP_OUTLINE
@@ -817,10 +817,10 @@ PlayerSettings:
     PS5: URP_OUTLINE
     QNX: URP_OUTLINE
     Stadia: URP_OUTLINE
-    Standalone: URP_OUTLINE
+    Standalone: URP_OUTLINE;USE_INPUT_SYSTEM_POSE_CONTROL;USE_STICK_CONTROL_THUMBSTICKS
     VisionOS: URP_OUTLINE
     WebGL: URP_OUTLINE
-    Windows Store Apps: URP_OUTLINE
+    Windows Store Apps: URP_OUTLINE;USE_INPUT_SYSTEM_POSE_CONTROL;USE_STICK_CONTROL_THUMBSTICKS
     XboxOne: URP_OUTLINE
     iPhone: URP_OUTLINE
     tvOS: URP_OUTLINE
